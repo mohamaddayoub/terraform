@@ -9,6 +9,7 @@ variable "env_prefix" {}
 variable "my_ip" {}
 variable "instance_type" {}
 variable "key_pair" {}
+variable "my_pub_key_location" {}
 resource "aws_vpc" "DevOps_VPC" {
     cidr_block = var.vpc_cidr_block
     tags = {
@@ -101,7 +102,10 @@ data "aws_ami" "latest_amazon_linux" {
       values = ["hvm"]
     }
 }
-
+resource "aws_key_pair" "ssh_key" {
+    key_name = "devops_key_server"
+    public_key = "${file(var.my_pub_key_location)}"
+}
 resource "aws_instance" "DevOps_SERVER" {
     ami = data.aws_ami.latest_amazon_linux.id
     instance_type = var.instance_type
@@ -109,8 +113,12 @@ resource "aws_instance" "DevOps_SERVER" {
     vpc_security_group_ids = [aws_default_security_group.default.id]
     availability_zone = var.az
     subnet_id = aws_subnet.DevOps_SUBNET.id
-    key_name = var.key_pair
+    key_name = aws_key_pair.ssh_key.key_name
     tags = {
       "Name" = "${var.env_prefix}-server-1"
     }
+}
+
+output "ec2_public_ip" {
+    value = aws_instance.DevOps_SERVER.public_ip
 }
