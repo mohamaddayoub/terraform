@@ -9,6 +9,9 @@ variable "env_prefix" {}
 variable "my_ip" {}
 variable "instance_type" {}
 variable "my_pub_key_location" {}
+variable "my_private_key_location" {}
+
+
 resource "aws_vpc" "DevOps_VPC" {
     cidr_block = var.vpc_cidr_block
     tags = {
@@ -101,10 +104,16 @@ data "aws_ami" "latest_amazon_linux" {
       values = ["hvm"]
     }
 }
+
+
+
 resource "aws_key_pair" "ssh_key" {
     key_name = "devops_key_server"
     public_key = file(var.my_pub_key_location)
 }
+
+
+
 resource "aws_instance" "DevOps_SERVER" {
     ami = data.aws_ami.latest_amazon_linux.id
     instance_type = var.instance_type
@@ -114,7 +123,21 @@ resource "aws_instance" "DevOps_SERVER" {
     subnet_id = aws_subnet.DevOps_SUBNET.id
     key_name = aws_key_pair.ssh_key.key_name
 
-    user_data = "${file("entry-script.sh")}"
+    # user_data = "${file("entry-script.sh")}"
+
+    connection {
+      type = "ssh"
+      host = self.public_ip
+      user = "ec2-user"
+      private_key = file(var.my_private_key_location)
+    }
+
+    provisioner "remote-exec" {
+      inline = [
+        "export ENV=hamada",
+        "mkdir newDir"
+      ]
+    }
 
     tags = {
       "Name" = "${var.env_prefix}-server-1"
