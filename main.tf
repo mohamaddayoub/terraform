@@ -2,16 +2,6 @@ provider "aws" {
     region = "us-east-2"
 }
 
-variable "vpc_cidr_block" {}
-variable "subnet_cidr_block" {}
-variable "az" {}
-variable "env_prefix" {}
-variable "my_ip" {}
-variable "instance_type" {}
-variable "my_pub_key_location" {}
-variable "my_private_key_location" {}
-
-
 resource "aws_vpc" "DevOps_VPC" {
     cidr_block = var.vpc_cidr_block
     tags = {
@@ -19,49 +9,15 @@ resource "aws_vpc" "DevOps_VPC" {
     }
 }
 
-resource "aws_subnet" "DevOps_SUBNET" {
+module "devops_subnet" {
+    source = "./modules/subnet"
     vpc_id = aws_vpc.DevOps_VPC.id
-    cidr_block = var.subnet_cidr_block
-    availability_zone = var.az
-    tags = {
-        Name = "${var.env_prefix}-subnet-1"
-    }  
-} 
-
-resource "aws_internet_gateway" "DevOps_IGW" {
-    vpc_id = aws_vpc.DevOps_VPC.id
-    tags = {
-      "Name" = "${var.env_prefix}-igw"
-    }
+    subnet_cidr_block = var.subnet_cidr_block
+    az = var.az
+    env_prefix = var.env_prefix
+    default_route_table_id = aws_vpc.DevOps_VPC.default_route_table_id
 }
 
-/*resource "aws_route_table" "DevOps_RTB" {
-    vpc_id = aws_vpc.DevOps_VPC.id
-    route {
-      cidr_block = "0.0.0.0/0"
-      gateway_id = aws_internet_gateway.DevOps_IGW.id      
-    } 
-    tags = {
-      "Name" = "${var.env_prefix}-rtb"
-    }
-}*/
-
-/*resource "aws_route_table_association" "AS_RTB" {
-  subnet_id = aws_subnet.DevOps_SUBNET.id
-  route_table_id = aws_route_table.DevOps_RTB.id
-}*/
-
-
-resource "aws_default_route_table" "DevOps_MAIN_RTB" {
-  default_route_table_id = aws_vpc.DevOps_VPC.default_route_table_id
-  route {
-      cidr_block = "0.0.0.0/0"
-      gateway_id = aws_internet_gateway.DevOps_IGW.id      
-    } 
-    tags = {
-      "Name" = "${var.env_prefix}-main-rtb"
-    }
-}
 resource "aws_default_security_group" "default" {
     vpc_id = aws_vpc.DevOps_VPC.id
 
@@ -120,24 +76,10 @@ resource "aws_instance" "DevOps_SERVER" {
     associate_public_ip_address = true
     vpc_security_group_ids = [aws_default_security_group.default.id]
     availability_zone = var.az
-    subnet_id = aws_subnet.DevOps_SUBNET.id
+    subnet_id = module.devops_subnet.subnet.id
     key_name = aws_key_pair.ssh_key.key_name
 
-    # user_data = "${file("entry-script.sh")}"
-
-    connection {
-      type = "ssh"
-      host = self.public_ip
-      user = "ec2-user"
-      private_key = file(var.my_private_key_location)
-    }
-
-    provisioner "remote-exec" {
-      inline = [
-        "export ENV=hamada",
-        "mkdir newDir"
-      ]
-    }
+    user_data = "${file("entry-script.sh")}"
 
     tags = {
       "Name" = "${var.env_prefix}-server-1"
@@ -145,6 +87,3 @@ resource "aws_instance" "DevOps_SERVER" {
 }
 
 
-output "ec2_public_ip" {
-    value = aws_instance.DevOps_SERVER.public_ip
-}
