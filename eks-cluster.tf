@@ -46,10 +46,9 @@ module "myapp_eks" {
 
   self_managed_node_groups = {
     one = {
-      name         = "mixed-1"
+      name         = "worker-node-1"
       max_size     = 2
       desired_size = 1
-
       use_mixed_instances_policy = true
       
     }
