@@ -44,15 +44,6 @@ module "myapp_eks" {
 
   }
 
-  self_managed_node_group_defaults = {
-    instance_type                          = "m6i.large"
-    update_launch_template_default_version = true
-    iam_role_additional_policies = {
-      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-    }
-  }
-  
-
   self_managed_node_groups = {
     one = {
       name         = "mixed-1"
