@@ -1,10 +1,10 @@
-#terraform
-❏ Created VPC & Subnet.
-❏ Created custom Route Table.
-❏ Configured Default/Main Route Table.
-❏ Configured Default Security Group.
-❏ Configured ssh key pair in Terraform config file.
-❏ Created EC2 Instance.
-❏ Configured Terraform to install Docker and run nginx image (user_data).
-❏ Extract shell commands to own shell script.
-❏ Accessed nginx through Browser.
+#terraform_eks:
+
+In this project I used Modules to build IaC on AWS.
+
+❏ Created the VPC by using the VPC module.
+❏ Created the EKS cluster and worker nodes by using the EKS module.
+❏ Configured Kubernetes provider to authenticate with K8s cluster.
+❏ Applied configurations.
+❏ Connect to the cluster locally by this command {aws eks update-kubeconfig --name CLUSTER_NAME --region REGION_NAME}
+❏ Deployed nginx Application/Pod.
