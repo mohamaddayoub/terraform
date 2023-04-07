@@ -9,6 +9,8 @@ variable "env_prefix" {}
 variable "my_ip" {}
 variable "instance_type" {}
 variable "my_pub_key_location" {}
+
+
 resource "aws_vpc" "DevOps_VPC" {
     cidr_block = var.vpc_cidr_block
     tags = {
