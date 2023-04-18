@@ -34,23 +34,6 @@ resource "aws_internet_gateway" "DevOps_IGW" {
     }
 }
 
-/*resource "aws_route_table" "DevOps_RTB" {
-    vpc_id = aws_vpc.DevOps_VPC.id
-    route {
-      cidr_block = "0.0.0.0/0"
-      gateway_id = aws_internet_gateway.DevOps_IGW.id      
-    } 
-    tags = {
-      "Name" = "${var.env_prefix}-rtb"
-    }
-}*/
-
-/*resource "aws_route_table_association" "AS_RTB" {
-  subnet_id = aws_subnet.DevOps_SUBNET.id
-  route_table_id = aws_route_table.DevOps_RTB.id
-}*/
-
-
 resource "aws_default_route_table" "DevOps_MAIN_RTB" {
   default_route_table_id = aws_vpc.DevOps_VPC.default_route_table_id
   route {
@@ -107,7 +90,7 @@ resource "aws_key_pair" "ssh_key" {
     key_name = "devops_key_server"
     public_key = file(var.my_pub_key_location)
 }
-resource "aws_instance" "DevOps_SERVER" {
+resource "aws_instance" "DevOps_SERVER_1" {
     ami = data.aws_ami.latest_amazon_linux.id
     instance_type = var.instance_type
     associate_public_ip_address = true
@@ -123,7 +106,20 @@ resource "aws_instance" "DevOps_SERVER" {
     }
 }
 
+resource "aws_instance" "DevOps_SERVER_2" {
+    ami = data.aws_ami.latest_amazon_linux.id
+    instance_type = var.instance_type
+    associate_public_ip_address = true
+    vpc_security_group_ids = [aws_default_security_group.default.id]
+    availability_zone = var.az
+    subnet_id = aws_subnet.DevOps_SUBNET.id
+    key_name = aws_key_pair.ssh_key.key_name
 
-output "ec2_public_ip" {
-    value = aws_instance.DevOps_SERVER.public_ip
+    user_data = "${file("entry-script.sh")}"
+
+    tags = {
+      "Name" = "${var.env_prefix}-server-2"
+    }
 }
+
+
